@@ -153,20 +153,11 @@ int gralloc_register_buffer(gralloc_module_t const* module,
     if (!module || private_handle_t::validate(handle) < 0)
         return -EINVAL;
 
-    /* NOTE: we need to initialize the buffer as not mapped/not locked
-     * because it shouldn't when this function is called the first time
-     * in a new process. Ideally these flags shouldn't be part of the
-     * handle, but instead maintained in the kernel or at least
-     * out-of-line
-     */
-
-    int err = gralloc_map(module, handle);
-    if (err) {
-        ALOGE("%s: gralloc_map failed", __FUNCTION__);
-        return err;
-    }
-
-    return 0;
+    int err =  gralloc_map(module, handle);
+    /* Do not fail register_buffer for secure buffers*/
+    if (err == -EACCES)
+        err = 0;
+    return err;
 }
 
 int gralloc_unregister_buffer(gralloc_module_t const* module,
